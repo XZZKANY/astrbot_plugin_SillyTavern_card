@@ -1,0 +1,61 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>酒馆旁观页</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell narrow spectator-shell">
+      <header class="page-header compact">
+        <div class="hero">
+          <p class="eyebrow">公开旁观页</p>
+          <h1 id="spectator-title">加载中...</h1>
+          <p id="spectator-subtitle" class="muted">正在同步主持人播报</p>
+          <div id="spectator-closed-banner" class="closed-banner hidden">房间已关闭，当前页面保留最后一次公开实况。</div>
+          <div class="phase-progress" aria-label="阶段进度">
+            <div class="phase-progress-head">
+              <span id="spectator-progress-label">阶段进度</span>
+              <strong id="spectator-progress-text">-/-</strong>
+            </div>
+            <div class="progress-track"><div id="spectator-progress" class="progress-fill"></div></div>
+          </div>
+        </div>
+      </header>
+
+      <section class="card scene-card compact-card">
+        <h2>当前场景</h2>
+        <div id="spectator-scene" class="feature-copy">等待公开实况同步。</div>
+      </section>
+
+      <section class="card action-card compact-card">
+        <h2>公共行动</h2>
+        <div id="spectator-action" class="feature-copy">等待阶段行动建议。</div>
+      </section>
+
+      <section class="card spectator-feed-card">
+        <div class="section-heading">
+          <div>
+            <h2>只读公开实况</h2>
+            <p class="muted">旁观页只显示主持人公开播报，不显示本局参与者聊天。</p>
+          </div>
+          <span class="feed-chip">公开播报</span>
+        </div>
+        <section id="spectator-chat-feed" class="chat-feed spectator-feed"></section>
+      </section>
+
+      <section class="card compact-card command-panel-card">
+        <h2>公开操作提示</h2>
+        <p class="muted">复制回群发送。网页只做提示，不会替你推进机器人。</p>
+        <div id="spectator-command-panel" class="command-panel"></div>
+      </section>
+
+      <section class="card compact-card">
+        <h2>当前实况</h2>
+        <dl id="spectator-meta" class="meta-list"></dl>
+      </section>
+    </main>
+    <script type="module" src="/spectator.js"></script>
+  </body>
+</html>

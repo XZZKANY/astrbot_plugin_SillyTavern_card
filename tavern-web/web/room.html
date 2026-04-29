@@ -1,0 +1,91 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>酒馆房间页</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell room-shell">
+      <header class="page-header compact">
+        <div class="hero room-hero">
+          <p class="eyebrow">本局参与者聊天</p>
+          <h1 id="room-title">加载中...</h1>
+          <p id="room-subtitle" class="muted">正在读取房间状态</p>
+          <div id="room-closed-banner" class="closed-banner hidden">房间已关闭，当前页面保留最后一次公开实况。</div>
+          <div class="phase-progress" aria-label="阶段进度">
+            <div class="phase-progress-head">
+              <span id="room-progress-label">阶段进度</span>
+              <strong id="room-progress-text">-/-</strong>
+            </div>
+            <div class="progress-track"><div id="room-progress" class="progress-fill"></div></div>
+          </div>
+        </div>
+      </header>
+
+      <section class="room-layout">
+        <section class="room-main-column">
+          <article class="card room-feed-card">
+            <div class="section-heading">
+              <div>
+                <h2>本局时间线</h2>
+                <p class="muted">这里是本局参与者聊天，不会显示到旁观页。</p>
+              </div>
+              <span class="feed-chip">公开播报 + 参与者聊天</span>
+            </div>
+            <section id="room-chat-feed" class="chat-feed"></section>
+          </article>
+
+          <section class="room-bottom-panels">
+            <article class="card room-composer-card">
+              <h2>发送到本局聊天</h2>
+              <p class="muted">输入你的网页昵称和内容，消息只会显示给本局参与者。</p>
+              <form id="room-chat-form" class="chat-form">
+                <input id="room-chat-name" maxlength="24" placeholder="网页昵称" autocomplete="nickname" />
+                <textarea id="room-chat-content" maxlength="300" placeholder="输入本局聊天，例如：我怀疑：____"></textarea>
+                <button type="submit">发送到本局聊天</button>
+              </form>
+              <p id="room-chat-status" class="chat-status muted"></p>
+            </article>
+
+            <article class="card compact-card template-panel-card">
+              <h2>推荐话术</h2>
+              <p class="muted">不知道怎么开口时，复制一条再补全空白。</p>
+              <div id="room-template-panel" class="template-panel"></div>
+            </article>
+          </section>
+        </section>
+
+        <aside class="room-side-panels">
+          <article class="card compact-card scene-card">
+            <h2>当前场景</h2>
+            <div id="room-scene" class="feature-copy">等待公开实况同步。</div>
+          </article>
+
+          <article class="card compact-card action-card">
+            <h2>公共行动</h2>
+            <div id="room-action" class="feature-copy">等待阶段行动建议。</div>
+          </article>
+
+          <article class="card compact-card command-panel-card">
+            <h2>操作指令</h2>
+            <p class="muted">网页不直接操作机器人。复制指令后回群发送，避免误触推进。</p>
+            <div id="room-command-panel" class="command-panel"></div>
+          </article>
+
+          <article class="card compact-card">
+            <h2>房间状态</h2>
+            <dl id="room-meta" class="meta-list"></dl>
+          </article>
+
+          <article class="card compact-card">
+            <h2>成员列表</h2>
+            <ul id="member-list" class="stack-list"></ul>
+          </article>
+        </aside>
+      </section>
+    </main>
+    <script type="module" src="/room.js"></script>
+  </body>
+</html>

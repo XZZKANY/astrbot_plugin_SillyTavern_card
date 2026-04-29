@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>酒馆实况</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell narrow">
+      <section class="card">
+        <h1>酒馆实况网站</h1>
+        <p>请输入房间号后访问公开房间页或旁观页。</p>
+        <form id="jump-form" class="jump-form">
+          <input id="room-id" name="roomId" placeholder="例如 1083966574" />
+          <div class="actions">
+            <button type="submit" data-target="room">进入房间页</button>
+            <button type="button" data-target="spectator">进入旁观页</button>
+          </div>
+        </form>
+      </section>
+    </main>
+    <script>
+      const form = document.getElementById('jump-form');
+      const input = document.getElementById('room-id');
+      function go(target) {
+        const roomId = input.value.trim();
+        if (!roomId) return;
+        window.location.href = `/${target}/${encodeURIComponent(roomId)}`;
+      }
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        go('room');
+      });
+      document.querySelector('[data-target="spectator"]').addEventListener('click', () => go('spectator'));
+    </script>
+  </body>
+</html>

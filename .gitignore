@@ -1,0 +1,19 @@
+# 本地依赖
+node_modules/
+
+# 运行数据
+*.db
+*.db-shm
+*.db-wal
+data/
+
+# Python 缓存
+__pycache__/
+*.pyc
+
+# 本地工作记录
+.codex/
+
+# 系统文件
+.DS_Store
+Thumbs.db
