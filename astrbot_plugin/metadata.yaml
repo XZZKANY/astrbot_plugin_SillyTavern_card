@@ -1,0 +1,5 @@
+name: astrbot_plugin_tavern_lobby
+desc: AstrBot 群聊多人叙事酒馆插件，支持群聊开房、剧本选择、身份私发、回合推进和网页房间同步。
+version: 0.1.0-alpha
+author: XZZKANY
+repo: https://github.com/XZZKANY/astrbot_plugin_tavern_lobby

@@ -1,70 +1,62 @@
-# astrbot_plugin_SillyTavern_card
+# astrbot_plugin_tavern_lobby
 
-一个围绕 **AstrBot 酒馆组队插件** 与配套 **tavern-web 网页前端** 的整理仓库。
+AstrBot 群聊多人叙事 / 酒馆房间插件。
 
-当前仓库已经按两部分拆分：
+这个项目的定位是：在群聊里创建一桌轻量剧本 / 酒馆局，由 AstrBot 负责群聊命令、身份发放和回合推进，由 `tavern-web` 提供参与者房间页和旁观页。
 
-- `astrbot_plugin/`：AstrBot 群聊插件源码
-- `tavern-web/`：房间页 / 旁观页 / API / WebSocket 前端与服务端源码
-
-这份仓库的目标不是只放单一脚本，而是把当前已经真实跑通过的一整套玩法链路整理清楚，方便继续维护、接手或二次开发。
+> 当前仓库历史上使用过 `astrbot_plugin_SillyTavern_card` 名称，但实际功能已经明确收敛为 **酒馆组队与网页房间同步**，不是 SillyTavern 角色卡解析 / 转换插件。建议 GitHub 仓库后续改名为 `astrbot_plugin_tavern_lobby`。
 
 ## 当前能力
 
 ### AstrBot 插件
 
-- 群里创建酒馆
-- 选择剧本
+- 群聊创建酒馆
+- 剧本列表与剧本选择
 - 玩家加入 / 退出
-- 房主开始游戏
+- 3 到 5 人开局
+- 未选剧本时自动使用默认剧本
+- 房主开始游戏 / 推进回合 / 结束房间
 - 自动分配身份
-- `我的身份` 私发
-- 推进回合
-- 结束 / 解散房间
-- 同步房间状态到 `tavern-web`
+- `我的身份` 私发，不在公共群泄露身份
+- 房间链接只在创建时出现一次，减少刷屏
+- 同步公开状态到网页服务
 
 ### tavern-web
 
-- `room` 页：参与者视角
-- `spectator` 页：只读旁观视角
-- 公开时间线与参与者聊天分离
+- `room`：参与者房间页
+- `spectator`：只读旁观页
+- 公开播报与参与者聊天分离
 - WebSocket 实时同步
-- 参与者聊天群聊式气泡布局
-  - 自己的消息在右侧
-  - 别人的消息在左侧
+- 参与者聊天群聊式布局
+  - 自己消息在右侧
+  - 他人消息在左侧
 - 房间关闭后禁发
 
 ## 仓库结构
 
 ```text
-astrbot_plugin_SillyTavern_card/
+astrbot_plugin_tavern_lobby/
 ├─ astrbot_plugin/
 │  ├─ main.py
+│  ├─ metadata.yaml
+│  ├─ requirements.txt
+│  ├─ tavern_web_config.example.json
 │  └─ README.md
 ├─ tavern-web/
 │  ├─ src/
 │  ├─ web/
-│  ├─ docs/
 │  ├─ package.json
 │  ├─ server.js
+│  ├─ .env.example
 │  └─ verify_*.mjs
 ├─ docs/
-│  └─ 使用说明.md
+│  ├─ 使用说明.md
+│  └─ 重命名与路线图.md
 ├─ reports/
-│  └─ 2026-04-30-astrbot-tavern-plugin-report.md
 └─ README.md
 ```
 
-## 快速开始
-
-### 1. 看源码说明
-
-- 插件说明：`astrbot_plugin/README.md`
-- 网页说明：`tavern-web/README.md`
-- 使用说明：`docs/使用说明.md`
-- 详细交付报告：`reports/2026-04-30-astrbot-tavern-plugin-report.md`
-
-### 2. 启动 tavern-web
+## 快速启动 tavern-web
 
 ```bash
 cd tavern-web
@@ -74,9 +66,11 @@ npm run start
 
 默认监听：
 
-- `http://0.0.0.0:8088`
+```text
+http://0.0.0.0:8088
+```
 
-### 3. 校验本地功能
+## 本地验证
 
 ```bash
 cd tavern-web
@@ -86,27 +80,38 @@ npm run verify:chat
 npm run verify:ui
 ```
 
-## 当前整理范围说明
+## AstrBot 插件配置
 
-本仓库这次入库的是 **当前实际可运行源码**：
+插件侧可通过环境变量或配置文件接入 `tavern-web`：
 
-- AstrBot 插件以当前 live 镜像源码为准
-- `tavern-web` 以当前本地工作目录中的有效源码与验证脚本为准
+```text
+TAVERN_WEB_ENABLED=1
+TAVERN_WEB_SYNC_URL=http://127.0.0.1:8088/internal
+TAVERN_WEB_PUBLIC_BASE_URL=http://你的域名或IP:8088
+TAVERN_WEB_SYNC_TOKEN=替换为强随机字符串
+```
 
-未纳入：
+配置文件模板见：
 
-- `node_modules`
-- 测试数据库
-- 临时备份
-- tar 包
-- 线上运行态文件
+```text
+astrbot_plugin/tavern_web_config.example.json
+```
 
-## 后续建议
+## 当前状态
 
-如果后面准备把它做成正式发布项目，建议继续补：
+当前代码仍处于 `alpha` 阶段，已经能跑通端到端流程，但还不是成熟商业化项目。
 
-1. 插件安装元数据 / manifest
-2. 配置模板文件
-3. 一键部署脚本
-4. 更正式的版本发布说明
-5. 更强的网页身份绑定模型
+下一阶段优先级：
+
+1. GitHub 仓库实际改名为 `astrbot_plugin_tavern_lobby`
+2. 拆分 `astrbot_plugin/main.py` 的单文件主逻辑
+3. 外置剧本内容包
+4. 增加参与者 / 旁观者签名 token
+5. 将 Bot 到 Web 的同步改为异步 HTTP 客户端或队列
+6. 替换或增强当前裸 WebSocket broker
+
+## 文档
+
+- 使用说明：`docs/使用说明.md`
+- 重命名与路线图：`docs/重命名与路线图.md`
+- 详细报告：`reports/2026-04-30-astrbot-tavern-plugin-report.md`
