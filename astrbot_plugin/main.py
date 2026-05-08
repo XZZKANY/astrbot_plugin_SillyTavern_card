@@ -5,11 +5,12 @@ import json
 import os
 import random
 import urllib.error
+import urllib.parse
 import urllib.request
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from time import monotonic
+from time import monotonic, time
 from typing import ClassVar, Dict, List
 
 from astrbot.api.event import AstrMessageEvent, filter
@@ -34,6 +35,7 @@ TAVERN_WEB_ENABLED = os.getenv("TAVERN_WEB_ENABLED", "0").lower() in {"1", "true
 TAVERN_WEB_SYNC_URL = os.getenv("TAVERN_WEB_SYNC_URL", "").strip()
 TAVERN_WEB_PUBLIC_BASE_URL = os.getenv("TAVERN_WEB_PUBLIC_BASE_URL", "").strip()
 TAVERN_WEB_SYNC_TOKEN = os.getenv("TAVERN_WEB_SYNC_TOKEN", "").strip()
+TAVERN_WEB_AUTH_SECRET = os.getenv("TAVERN_WEB_AUTH_SECRET", "").strip()
 TAVERN_WEB_TIMEOUT_SECONDS = 2.0
 SCRIPT_LIBRARY = [
     {
@@ -531,16 +533,47 @@ class TavernLobbyPlugin(Star):
     def _web_sync_token(self) -> str:
         return TAVERN_WEB_SYNC_TOKEN or str(self.web_config.get("sync_token") or "").strip()
 
-    def _web_room_url(self, room: TavernRoom, spectator: bool = False) -> str:
+    def _web_auth_secret(self) -> str:
+        return TAVERN_WEB_AUTH_SECRET or str(self.web_config.get("auth_secret") or "").strip() or self._web_sync_token()
+
+    def _web_room_token(self, room: TavernRoom, role: str, user_id: str = "", user_name: str = "") -> str:
+        secret = self._web_auth_secret()
+        if not secret:
+            return ""
+        try:
+            import jwt
+        except ImportError:
+            logger.warning("TavernLobby web auth token unavailable: PyJWT is not installed")
+            return ""
+
+        now = int(time())
+        payload = {
+            "room_id": room.group_id,
+            "role": role,
+            "iat": now,
+            "exp": now + 86400,
+        }
+        if role == "participant":
+            payload["user_id"] = str(user_id or room.owner_id or "")
+            payload["user_name"] = str(user_name or room.owner_name or "")
+        token = jwt.encode(payload, secret, algorithm="HS256")
+        if isinstance(token, bytes):
+            return token.decode("utf-8")
+        return str(token)
+
+    def _web_room_url(self, room: TavernRoom, spectator: bool = False, user_id: str = "", user_name: str = "") -> str:
         base_url = self._web_public_base_url()
         if not base_url:
             return ""
         base = base_url.rstrip("/")
         path = "spectator" if spectator else "room"
-        return f"{base}/{path}/{room.group_id}"
+        role = "spectator" if spectator else "participant"
+        token = self._web_room_token(room, role, user_id=user_id, user_name=user_name)
+        query = f"?{urllib.parse.urlencode({'token': token})}" if token else ""
+        return f"{base}/{path}/{room.group_id}{query}"
 
     def _web_links_text(self, room: TavernRoom) -> str:
-        room_url = self._web_room_url(room)
+        room_url = self._web_room_url(room, user_id=room.owner_id, user_name=room.owner_name)
         spectator_url = self._web_room_url(room, spectator=True)
         parts: List[str] = []
         if room_url:

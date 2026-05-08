@@ -10,6 +10,7 @@ const testDbPath = path.join(rootDir, 'data', 'test-tavern-chat.db');
 process.env.TAVERN_WEB_PORT = '8094';
 process.env.TAVERN_WEB_DB_PATH = testDbPath;
 process.env.TAVERN_WEB_SYNC_TOKEN = 'test-token';
+process.env.TAVERN_WEB_AUTH_SECRET = 'test-secret-minimum-32-characters';
 
 await mkdir(path.dirname(testDbPath), { recursive: true });
 await Promise.all([
@@ -22,6 +23,7 @@ const { runMigrations } = await import('./src/db/migrations.js');
 runMigrations();
 const { createBroker } = await import('./src/ws/broker.js');
 const { createApp } = await import('./src/app.js');
+const { createParticipantToken } = await import('./src/auth/tokens.js');
 
 const broker = createBroker();
 const app = createApp({ broker });
@@ -31,6 +33,7 @@ await new Promise((resolve) => server.listen(8094, '127.0.0.1', resolve));
 
 const roomId = 'chat-room';
 const base = 'http://127.0.0.1:8094';
+const roomToken = await createParticipantToken({ roomId, userId: '1', userName: '网页玩家' });
 const roomMessages = [];
 const spectatorMessages = [];
 const roomWs = new WebSocket('ws://127.0.0.1:8094/ws');
@@ -43,6 +46,16 @@ roomWs.on('message', (raw) => roomMessages.push(JSON.parse(raw.toString())));
 spectatorWs.on('message', (raw) => spectatorMessages.push(JSON.parse(raw.toString())));
 roomWs.send(JSON.stringify({ type: 'subscribe', room_id: roomId, channel: 'room' }));
 spectatorWs.send(JSON.stringify({ type: 'subscribe', room_id: roomId, channel: 'spectator' }));
+
+const noTokenRoomView = await fetch(`${base}/api/rooms/${roomId}/room-view`);
+assert.equal(noTokenRoomView.status, 401);
+
+const noTokenChat = await fetch(`${base}/api/rooms/${roomId}/chat`, {
+  method: 'POST',
+  headers: { 'content-type': 'application/json' },
+  body: JSON.stringify({ user_name: '伪造房主', content: '伪造发言' }),
+});
+assert.equal(noTokenChat.status, 401);
 
 const syncResponse = await fetch(`${base}/internal/rooms/${roomId}/full-sync`, {
   method: 'POST',
@@ -73,7 +86,10 @@ assert.equal(syncResponse.status, 200);
 
 const chatResponse = await fetch(`${base}/api/rooms/${roomId}/chat`, {
   method: 'POST',
-  headers: { 'content-type': 'application/json' },
+  headers: {
+    'content-type': 'application/json',
+    authorization: `Bearer ${roomToken}`,
+  },
   body: JSON.stringify({
     user_name: '网页玩家',
     content: '我怀疑：旧实验楼门口的人<script>window.__xss=1</script>',
@@ -90,7 +106,9 @@ assert.equal(roomMessages.at(-1)?.type, 'chat_message');
 assert.equal(roomMessages.at(-1)?.payload?.chat_message?.content.includes('<script>'), true);
 assert.equal(spectatorMessages.some((message) => message.type === 'chat_message'), false);
 
-const roomViewResponse = await fetch(`${base}/api/rooms/${roomId}/room-view`);
+const roomViewResponse = await fetch(`${base}/api/rooms/${roomId}/room-view`, {
+  headers: { authorization: `Bearer ${roomToken}` },
+});
 assert.equal(roomViewResponse.status, 200);
 const roomView = await roomViewResponse.json();
 assert.equal(Array.isArray(roomView.public_timeline), true);
@@ -109,7 +127,10 @@ assert.equal(spectator.public_timeline.some((item) => item.event_type === 'publi
 
 const badChat = await fetch(`${base}/api/rooms/${roomId}/chat`, {
   method: 'POST',
-  headers: { 'content-type': 'application/json' },
+  headers: {
+    'content-type': 'application/json',
+    authorization: `Bearer ${roomToken}`,
+  },
   body: JSON.stringify({ user_name: '', content: '' }),
 });
 assert.equal(badChat.status, 400);
@@ -123,7 +144,10 @@ assert.equal(closeResponse.status, 200);
 
 const closedChat = await fetch(`${base}/api/rooms/${roomId}/chat`, {
   method: 'POST',
-  headers: { 'content-type': 'application/json' },
+  headers: {
+    'content-type': 'application/json',
+    authorization: `Bearer ${roomToken}`,
+  },
   body: JSON.stringify({ user_name: '网页玩家', content: '关闭后不该发送' }),
 });
 assert.equal(closedChat.status, 409);

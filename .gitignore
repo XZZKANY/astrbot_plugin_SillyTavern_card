@@ -1,11 +1,15 @@
 # 本地依赖
 node_modules/
+tavern-web/.npm-cache/
 
 # 运行数据
 *.db
 *.db-shm
 *.db-wal
 data/
+.env
+.env.*
+*.local
 
 # Python 缓存
 __pycache__/

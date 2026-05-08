@@ -10,6 +10,7 @@ const testDbPath = path.join(rootDir, 'data', 'test-tavern-ui.db');
 process.env.TAVERN_WEB_PORT = '8093';
 process.env.TAVERN_WEB_DB_PATH = testDbPath;
 process.env.TAVERN_WEB_SYNC_TOKEN = 'test-token';
+process.env.TAVERN_WEB_AUTH_SECRET = 'test-secret-minimum-32-characters';
 
 await mkdir(path.dirname(testDbPath), { recursive: true });
 await Promise.all([
@@ -22,6 +23,7 @@ const { runMigrations } = await import('./src/db/migrations.js');
 runMigrations();
 const { createBroker } = await import('./src/ws/broker.js');
 const { createApp } = await import('./src/app.js');
+const { createParticipantToken } = await import('./src/auth/tokens.js');
 
 const broker = createBroker();
 const app = createApp({ broker });
@@ -30,6 +32,7 @@ broker.attach(server);
 await new Promise((resolve) => server.listen(8093, '127.0.0.1', resolve));
 
 const roomId = 'ui-room';
+const roomToken = await createParticipantToken({ roomId, userId: '1', userName: '网页玩家' });
 
 async function fullSync(overrides = {}) {
   const payload = {
@@ -100,8 +103,8 @@ spectatorPage.on('request', (request) => {
   if (request.url().includes(`/api/rooms/${roomId}/spectator`)) spectatorFetches += 1;
 });
 
-await roomPage.goto(`http://127.0.0.1:8093/room/${roomId}`);
-await otherRoomPage.goto(`http://127.0.0.1:8093/room/${roomId}`);
+await roomPage.goto(`http://127.0.0.1:8093/room/${roomId}?token=${encodeURIComponent(roomToken)}`);
+await otherRoomPage.goto(`http://127.0.0.1:8093/room/${roomId}?token=${encodeURIComponent(roomToken)}`);
 await spectatorPage.goto(`http://127.0.0.1:8093/spectator/${roomId}`);
 await roomPage.getByRole('button', { name: '发送到本局聊天' }).waitFor();
 await otherRoomPage.getByRole('button', { name: '发送到本局聊天' }).waitFor();

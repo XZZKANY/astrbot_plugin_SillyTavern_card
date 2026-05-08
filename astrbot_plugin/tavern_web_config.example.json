@@ -2,5 +2,6 @@
   "enabled": true,
   "sync_url": "http://127.0.0.1:8088/internal",
   "public_base_url": "http://127.0.0.1:8088",
-  "sync_token": "请替换为强随机字符串"
+  "sync_token": "请替换为强随机字符串",
+  "auth_secret": "请替换为和 tavern-web 一致的强随机字符串"
 }

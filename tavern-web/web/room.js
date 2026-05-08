@@ -13,6 +13,15 @@ function roomIdFromPath() {
   return decodeURIComponent(window.location.pathname.split('/').pop() || '');
 }
 
+function roomTokenFromUrl() {
+  return new URLSearchParams(window.location.search).get('token') || '';
+}
+
+function authHeaders() {
+  const token = roomTokenFromUrl();
+  return token ? { authorization: `Bearer ${token}` } : {};
+}
+
 function escapeHtml(value) {
   return String(value ?? '')
     .replaceAll('&', '&amp;')
@@ -354,8 +363,15 @@ function renderAll(payload) {
   renderState();
 }
 
-async function fetchJson(url, init) {
-  const response = await fetch(url, init);
+async function fetchJson(url, init = {}) {
+  const headers = new Headers(init.headers || {});
+  for (const [key, value] of Object.entries(authHeaders())) {
+    headers.set(key, value);
+  }
+  const response = await fetch(url, {
+    ...init,
+    headers,
+  });
   if (!response.ok) {
     let detail = '';
     try {

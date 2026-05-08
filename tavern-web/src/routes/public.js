@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { requireRoomToken } from '../auth/middleware.js';
 import { addParticipantChat, getMembers, getPublicTimeline, getRoom, getRoomView, getSpectatorView } from '../store/roomStore.js';
 import { clampLimit } from '../utils/sanitize.js';
 
@@ -37,7 +38,7 @@ export function createPublicRouter({ broker } = {}) {
     res.json(getPublicTimeline(roomId, clampLimit(req.query.limit, 50, 200)));
   });
 
-  router.get('/rooms/:roomId/room-view', (req, res) => {
+  router.get('/rooms/:roomId/room-view', requireRoomToken('participant'), (req, res) => {
     const payload = getRoomView(String(req.params.roomId || ''));
     if (!payload) {
       return res.status(404).json({ error: 'room_not_found' });
@@ -53,7 +54,7 @@ export function createPublicRouter({ broker } = {}) {
     res.json(payload);
   });
 
-  router.post('/rooms/:roomId/chat', (req, res) => {
+  router.post('/rooms/:roomId/chat', requireRoomToken('participant'), (req, res) => {
     const roomId = String(req.params.roomId || '');
     const room = getRoom(roomId);
     if (!room) {
@@ -62,7 +63,8 @@ export function createPublicRouter({ broker } = {}) {
     if (room.is_closed) {
       return res.status(409).json({ error: 'room_closed' });
     }
-    const { userName, content } = normalizeChatInput(req.body || {});
+    const userName = String(req.roomToken?.user_name || '').trim().slice(0, 24);
+    const { content } = normalizeChatInput(req.body || {});
     if (!userName || !content) {
       return res.status(400).json({ error: 'invalid_chat_message' });
     }

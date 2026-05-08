@@ -9,6 +9,7 @@ const testDbPath = path.join(rootDir, 'data', 'test-tavern.db');
 process.env.TAVERN_WEB_PORT = '8091';
 process.env.TAVERN_WEB_DB_PATH = testDbPath;
 process.env.TAVERN_WEB_SYNC_TOKEN = 'test-token';
+process.env.TAVERN_WEB_AUTH_SECRET = 'test-secret-minimum-32-characters';
 
 await mkdir(path.dirname(testDbPath), { recursive: true });
 await Promise.all([
@@ -21,6 +22,7 @@ const { runMigrations } = await import('./src/db/migrations.js');
 runMigrations();
 const { createBroker } = await import('./src/ws/broker.js');
 const { createApp } = await import('./src/app.js');
+const { createParticipantToken } = await import('./src/auth/tokens.js');
 
 const broker = createBroker();
 const app = createApp({ broker });
@@ -69,6 +71,7 @@ const payload = {
     phase_total: 4,
   },
 };
+const roomToken = await createParticipantToken({ roomId, userId: '3241583594', userName: '预定调和' });
 
 const syncResponse = await fetch(`http://127.0.0.1:8091/internal/rooms/${roomId}/full-sync`, {
   method: 'POST',
@@ -96,7 +99,9 @@ const timeline = await timelineResponse.json();
 assert.equal(timeline.length, 1);
 assert.equal(timeline[0].title, '进入情报交流');
 
-const roomViewResponse = await fetch(`http://127.0.0.1:8091/api/rooms/${roomId}/room-view`);
+const roomViewResponse = await fetch(`http://127.0.0.1:8091/api/rooms/${roomId}/room-view`, {
+  headers: { authorization: `Bearer ${roomToken}` },
+});
 assert.equal(roomViewResponse.status, 200);
 const roomView = await roomViewResponse.json();
 assert.equal(roomView.room.current_actor_name, '预定调和');

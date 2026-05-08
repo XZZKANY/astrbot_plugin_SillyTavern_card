@@ -10,6 +10,7 @@ const testDbPath = path.join(rootDir, 'data', 'test-tavern-ws.db');
 process.env.TAVERN_WEB_PORT = '8092';
 process.env.TAVERN_WEB_DB_PATH = testDbPath;
 process.env.TAVERN_WEB_SYNC_TOKEN = 'test-token';
+process.env.TAVERN_WEB_AUTH_SECRET = 'test-secret-minimum-32-characters';
 
 await mkdir(path.dirname(testDbPath), { recursive: true });
 await Promise.all([
@@ -22,6 +23,7 @@ const { runMigrations } = await import('./src/db/migrations.js');
 runMigrations();
 const { createBroker } = await import('./src/ws/broker.js');
 const { createApp } = await import('./src/app.js');
+const { createParticipantToken } = await import('./src/auth/tokens.js');
 
 const broker = createBroker();
 const app = createApp({ broker });
@@ -31,6 +33,7 @@ broker.attach(server);
 await new Promise((resolve) => server.listen(8092, '127.0.0.1', resolve));
 
 const roomId = 'ws-room';
+const roomToken = await createParticipantToken({ roomId, userId: '1', userName: '网页玩家' });
 const roomMessages = [];
 const spectatorMessages = [];
 const roomWs = new WebSocket('ws://127.0.0.1:8092/ws');
@@ -105,6 +108,7 @@ const chatResponse = await fetch(`http://127.0.0.1:8092/api/rooms/${roomId}/chat
   method: 'POST',
   headers: {
     'content-type': 'application/json',
+    authorization: `Bearer ${roomToken}`,
   },
   body: JSON.stringify({
     user_name: '网页玩家',

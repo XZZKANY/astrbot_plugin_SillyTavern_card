@@ -7,6 +7,7 @@
     "start": "node server.js",
     "dev": "node --watch server.js",
     "verify:phase1": "node verify_phase1.mjs",
+    "verify:auth": "node verify_auth_e2e.mjs",
     "verify:ws": "node verify_ws_e2e.mjs",
     "verify:ui": "node verify_ui_e2e.mjs",
     "verify:chat": "node verify_chat_e2e.mjs",
@@ -18,6 +19,7 @@
   "dependencies": {
     "better-sqlite3": "^11.8.1",
     "express": "^4.21.2",
+    "jose": "^6.2.3",
     "ws": "^8.18.0"
   },
   "devDependencies": {
